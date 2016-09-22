@@ -26,7 +26,7 @@ rbinom(number.of.samples, number.of.trials.per.sample, probability.of.success)
 # of course, ESP doesn't exist, so the probability of a successful guess is 0.50.
 # store the result in a vector called esp.data
 
-esp.data <- NA # answer needed here.
+esp.data <- rbinom(100, 20, 0.5)
 
 # a quick way to visualize a distribution is with the hist() function:
 hist(esp.data)
@@ -45,7 +45,7 @@ dbinom(value.to.check, number.of.trials, probability.of.success)
 # questions correctly, if they have a 0.9 probability of giving a correct answer
 # for each individual question.
 
-# answer needed here.
+dbinom(87, 100, 0.9)
 
 # with dbinom, you can use a vector as the first argument, to check the probability
 # of multiple values at the same time:
@@ -58,7 +58,9 @@ dbinom(values, 8, 0.5)
 # hint: create one vector for the different possible outcomes
 #       then use dbinom to calculate the probability of all of the elements in the vector
 
-# answer needed here.
+values <- seq(from=0, to= 16, by= 1)
+coin.data <- dbinom(values, 16, .5)
+plot(values, coin.data)
 
 # quick detour #
 
@@ -80,14 +82,17 @@ hist(hist.sample, xlim=c(0,100)) # compare this plot to the line above.
 # generate 100 samples from a normal distribution with mean 0 and standard deviation 10.
 # then use hist() to create a histogram of these samples.
 
-# answer needed here.
+normal.distrib <- rnorm(100, mean= 0, sd= 10)
+hist(normal.distrib)
 
 # now plot the probability density function of this distribution.
 # use the same strategy as you did above with the binomial to find the density of the normal
 # distribution with mean 0 and sd 10 for values between -50 and 50. the distribution is continuous
 # so, choose a reasonably small step size between values (remember the seq() function).
 
-# answer needed here.
+values <- seq(from=-50, to= 50, by= 1)
+coin.data <- dnorm(values, mean= 0, sd= 10)
+plot(values, coin.data, xlim=c(-50, 50))
 
 #### practice calculating likelihoods ####
 
@@ -99,12 +104,14 @@ esp.practice.data <- data.frame(subject=1:10, n.correct=c(11,10,6,10,6,12,10,8,9
 # calculate the likelihood (regular, not log) for this data for three different values
 # of the probability of success parameter: 0.4, 0.5, and 0.6.
 # hint: prod() will multiple all elements of a vector together.
+prod(dbinom(esp.practice.data$n.correct, 20, .4))
+prod(dbinom(esp.practice.data$n.correct, 20, .5))
+prod(dbinom(esp.practice.data$n.correct, 20, .6))
 
-# answer needed here.
 
 # which parameter value of those options is most likely?
 
-# answer here.
+.5
 
 # here is a sample of response times for a single subject from a rapid decision making experiment.
 rt.sample <- c(391.5845, 411.9970, 358.6373, 505.3099, 616.2892, 481.0751, 422.3132, 511.7213, 205.2692, 522.3433, 370.1850,
@@ -116,26 +123,26 @@ rt.sample <- c(391.5845, 411.9970, 358.6373, 505.3099, 616.2892, 481.0751, 422.3
 # hint: sum() adds the numbers in a vector. log() is the natural log function, or log=T for dnorm().
 
 # 1) mean 350, sd 50
-# answer needed here.
+sum(dnorm(log(rt.sample), mean= 350, sd= 50))
 
 # 2) mean 400, sd 50
-# answer needed here.
+sum(dnorm(log(rt.sample), mean= 400, sd= 50))
 
 # 3) mean 450, sd 50
-# answer needed here.
+sum(dnorm(log(rt.sample), mean= 450, sd= 50))
 
 # 4) mean 350, sd 100
-# answer needed here.
+sum(dnorm(log(rt.sample), mean= 350, sd= 100))
 
 # 5) mean 400, sd 100
-# answer needed here.
+sum(dnorm(log(rt.sample), mean= 400, sd= 100))
 
 # 6) mean 450, sd 100
-# answer needed here.
+sum(dnorm(log(rt.sample), mean= 450, sd= 100))
 
 # which parameter set has the highest likelihood?
 
-# answer needed here.
+# mean 350, sd 100
 
 # here is a set of data for a subject in a categorization experiment, modeled with GCM.
 # calculate the log likelihood of the parameters in the model (which i am not showing you).
@@ -148,8 +155,10 @@ gcm.practice.data <- data.frame(correct.response = c(T, T, T, T, F, T, T, F, T, 
                                 gcm.probability.correct = c(0.84, 0.80, 0.84, 0.80, 0.79, 0.86, 0.89, 0.87, 0.69, 0.85, 0.75,
                                                             0.74, 0.82, 0.85, 0.87, 0.69, 0.83, 0.87, 0.80, 0.76))
 
-# answer needed here.
+gcm.practice.data$likelihood <- mapply(function(probability, response){if (response == F) {return(1 - probability)}
+  else {return(probability)}}, gcm.practice.data$gcm.probability.correct, gcm.practice.data$correct.response)
 
+sum(log(gcm.practice.data$likelihood))
 #### maximum likelihood estimation ####
 
 # the same search strategies we used for parameter fitting with rmse can be used with likelihoods,
@@ -162,8 +171,11 @@ same.diff.data <- c(32, 29, 31, 34, 26, 29, 31, 34, 29, 31, 30, 29, 31, 34, 33, 
 # we can model this experiment's data as 40 coin flips for each subject. use grid search to plot the likelihood
 # function for values of theta (probability of a correct response) between 0.5 and 0.9, in steps of 0.01.
 # start by writing a function that calculates the likelihood (not log) for the entire set of data given a value of theta.
+probs.correct.response <- seq(from= .5, to= .9, by= .01)
 
-# answer needed here.
+likelihood <- function(theta){
+  return (prod(dbinom(same.diff.data, 40, theta)))
+  }
 
 # then use sapply to run the function for each possible value of theta in the set. use seq() to generate the
 # set of possible values. plot the set of values on the x axis and the corresponding likelihoods on the y axis.
