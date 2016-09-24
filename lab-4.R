@@ -123,26 +123,26 @@ rt.sample <- c(391.5845, 411.9970, 358.6373, 505.3099, 616.2892, 481.0751, 422.3
 # hint: sum() adds the numbers in a vector. log() is the natural log function, or log=T for dnorm().
 
 # 1) mean 350, sd 50
-sum(dnorm(log(rt.sample), mean= 350, sd= 50))
+sum(dnorm(rt.sample, mean= 350, sd= 50, log= T))
 
 # 2) mean 400, sd 50
-sum(dnorm(log(rt.sample), mean= 400, sd= 50))
+sum(dnorm(rt.sample, mean= 400, sd= 50, log= T))
 
 # 3) mean 450, sd 50
-sum(dnorm(log(rt.sample), mean= 450, sd= 50))
+sum(dnorm(rt.sample, mean= 450, sd= 50, log= T))
 
 # 4) mean 350, sd 100
-sum(dnorm(log(rt.sample), mean= 350, sd= 100))
+sum(dnorm(rt.sample, mean= 350, sd= 100, log= T))
 
 # 5) mean 400, sd 100
-sum(dnorm(log(rt.sample), mean= 400, sd= 100))
+sum(dnorm(rt.sample, mean= 400, sd= 100, log= T))
 
 # 6) mean 450, sd 100
-sum(dnorm(log(rt.sample), mean= 450, sd= 100))
+sum(dnorm(rt.sample, mean= 450, sd= 100, log= T))
 
 # which parameter set has the highest likelihood?
 
-# mean 350, sd 100
+# mean 400, sd 100
 
 # here is a set of data for a subject in a categorization experiment, modeled with GCM.
 # calculate the log likelihood of the parameters in the model (which i am not showing you).
@@ -171,7 +171,6 @@ same.diff.data <- c(32, 29, 31, 34, 26, 29, 31, 34, 29, 31, 30, 29, 31, 34, 33, 
 # we can model this experiment's data as 40 coin flips for each subject. use grid search to plot the likelihood
 # function for values of theta (probability of a correct response) between 0.5 and 0.9, in steps of 0.01.
 # start by writing a function that calculates the likelihood (not log) for the entire set of data given a value of theta.
-probs.correct.response <- seq(from= .5, to= .9, by= .01)
 
 likelihood <- function(theta){
   return (prod(dbinom(same.diff.data, 40, theta)))
@@ -179,10 +178,18 @@ likelihood <- function(theta){
 
 # then use sapply to run the function for each possible value of theta in the set. use seq() to generate the
 # set of possible values. plot the set of values on the x axis and the corresponding likelihoods on the y axis.
+probs.correct.response <- seq(from= .5, to= .9, by= .01)
 
-# answer needed here.
+set.likelihoods <- sapply(probs.correct.response, likelihood)
+
+plot(probs.correct.response, set.likelihoods)
+best.par <- probs.correct.response[which(grepl(max(set.likelihoods), set.likelihoods))]
 
 # the "true" underlying value i used to generate the data was 0.75. does that match up with the grid search?
+
+# The grid search indicates that a probability of correct response of .76 is the most probable
+# to have generated te data.
+
 
 ## mle with optim()
 
@@ -195,17 +202,19 @@ likelihood <- function(theta){
 # create a vector of x values from 0 to 100, and the corresponding vector of y values,
 # then plot these with x values on the x axis, and y values on the y axis.
 
-# answer needed here.
+x.values <- seq(from=0, to=100, by=1)
+y.values <- sapply(x.values, function(x){return (4 + (x * 0.8))})
+plot(x.values, y.values)
 
 # now let's assume that the relationship between x and y isn't perfect. there's a bit of random
 # noise. add a random sample from a normal distribution with mean 0 and sd 10 to each y value.
 # hint: there are 101 y values, so you need 101 samples.
 
-# answer needed here.
+y.values <- sapply(x.values, function(x){return (4 + (x * 0.8))}) + rnorm(101, mean= 0, sd= 10)
 
 # plot the data again, with the new noisy y values.
 
-# answer needed here.
+plot(x.values, y.values)
 
 # there are three parameter values that control this plot,
 # the intercept of the line: 4
@@ -236,26 +245,50 @@ dnorm(y.observed, y.predicted, 10)
 # write the code to see how likely it is that y will be 33 when x is 29? (assuming sd = 10)
 # the correct answer is 0.03371799...
 
-# answer needed here.
+x.observed <- 29
+y.observed <- 33
+y.predicted <- 4 + 0.8*x.observed
+dnorm(y.observed, y.predicted, 10)
 
 # now generalize your solution to compute the likelihood of each value of y that you generated above.
 # in other words, write the code that takes a vector of x and y values, and returns the probability
 # of each pair given that the relationship between x and y is y <- 4 + 0.8*x and the normal distribution has an sd of 10.
 
-# answer needed here.
+xy.values <- data.frame(x.values, y.values)
+
+xy.values$probability <- mapply(function(x, y){
+  return (dnorm(y, (4 + 0.8*x), 10))},
+  x.values, y.values) 
 
 # now generalize your solution one step further. write a function that takes in a vector of parameters,
 # where parameters[1] is the intercept, parameters[2] is the slope, and parameters[3] is the sd of the normal,
 # and returns the total **negative log likelihood**. remember, we want the negative log likelihood because
 # optim() will find the set of parameters that minimizes a function.
 
-# answer needed here.
+likelihood.model.recovery <- function(parameters){
+  intercept <- parameters[1] 
+  slope <- parameters[2] 
+  sd <- parameters[3] 
+  
+  if (sd < 0){
+    return (NA)
+  }
+  else {
+  return (sum(mapply(function(x, y){
+    return (dnorm(y, (intercept + slope*x), sd, log=T))},
+    x.values, y.values)))
+  }
+}
 
 # use optim() and Nelder-Mead to search for the best fitting parameters. remember to ensure that sd > 0
 # and return NA if it is not.
 
-# answer needed here.
+likelihood.model.recov <- optim(c(1,1, 1), likelihood.model.recovery, method="Nelder-Mead")
+likelihood.model.recov$par
+likelihood.model.recov$value
 
 # finally, plot the best fitting line on your points by using the abline() function, and the parameters that optim() found.
 
-# answer needed here.
+plot(x.values, y.values) +
+  abline(a=4, b=.8, col='red') +
+  abline(a=likelihood.model.recov$par[1], b=likelihood.model.recov$par[2], col='blue')
