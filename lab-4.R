@@ -280,10 +280,11 @@ likelihood.model.recovery <- function(parameters){
   }
 }
 
+
 # use optim() and Nelder-Mead to search for the best fitting parameters. remember to ensure that sd > 0
 # and return NA if it is not.
 
-likelihood.model.recov <- optim(c(1,1, 1), likelihood.model.recovery, method="Nelder-Mead")
+likelihood.model.recov <- optim(c(1, 1, 1), likelihood.model.recovery, method="Nelder-Mead")
 likelihood.model.recov$par
 likelihood.model.recov$value
 
